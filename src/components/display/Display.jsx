@@ -1,4 +1,5 @@
 import './display.scss'
+import '../../App.css';
 import { Link } from 'react-router-dom'
 import deleteIcon from '../../assets/icons/delete-icon.svg';
 import editIcon from '../../assets/icons/edit-icon.svg';
@@ -29,7 +30,7 @@ const Display = (props) => {
             </tr>
             {
                 props.contactArray && props.contactArray.map((contact, index) => (
-                    <tr key={index}>
+                    <tr key={index} class="row">
                         <td>{contact.name}</td>
                         <td>{contact.address}</td>
                         <td>{contact.city}</td>
