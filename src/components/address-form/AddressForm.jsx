@@ -30,12 +30,24 @@ const AddressForm = (props) => {
     const addressBookService = new AddressBookService();
     const [formValue, setForm] = useState(initialValue);
     const [displayMeassage, setDisplayMessage] = useState("");
+    const [nameError, setNameError] = useState(null);
+    const [addressError, setAddressError] = useState(null);
+    const [phoneError, setPhoneError] = useState(null);
+    const [validForm, setValidForm] = useState(false);
     const params = useParams();
     useEffect(() => {
         if (params.id) {
             getDataById(params.id);
         }
     },[]);
+
+    useEffect(() => {
+        try {
+            setValidForm(nameError.length === 0 && addressError.length === 0 && phoneError.length === 0);
+        } catch (e) {
+
+        }
+    }, [nameError, addressError, phoneError])
 
     const getDataById = (id) => {
         addressBookService.getContact(id).then((data) => {
@@ -54,6 +66,27 @@ const AddressForm = (props) => {
         });
     };
     const changeValue = (event) => {
+        if (event.target.name === "name") {
+            if (!RegExp("^[A-Z][a-z\\sA-Z]{2,}$").test(event.target.value)) {
+                setNameError("Invalid Name");
+            } else {
+                setNameError("");
+            }
+        }
+        else if (event.target.name === "phoneNumber") {
+            if (!RegExp("^([0-9]{2,3}\\s)?[6-9]{1}[0-9]{9}$").test(event.target.value)) {
+                setPhoneError("Invalid Phone");
+            } else {
+                setPhoneError("");
+            }
+        }
+        else if (event.target.name === "address") {
+            if (!RegExp("^(.{3,}\\s){2,}$").test(event.target.value)) {
+                setAddressError("Invalid Address");
+            } else {
+                setAddressError("");
+            }
+        }
         setForm({ ...formValue, [event.target.name]: event.target.value })
     }
 
@@ -68,36 +101,37 @@ const AddressForm = (props) => {
             zip: ''
 
         }
-        const regName = /^[A-Z]{1}[A-Za-z]{2,}([\s]?([a-zA-Z]+))*$/
-        if (formValue.name.length < 1 || !regName.test(formValue.name)) {
-            error.name = 'Name Invalid'
-            isError = true;
-        }
-        const regPhoneNumber = /^[+]?([0-9]{2})?[789]{1}[0-9]{9}$/
-        if (formValue.phoneNumber.length < 1 || !regPhoneNumber.test(formValue.phoneNumber)) {
-            error.phoneNumber = 'Phone Number Invalid'
-            isError = true;
-        }
-        const regAddress = /^[a-zA-Z0-9]{3,}([\s]?[a-zA-Z0-9]{3,})*$/
-        if (formValue.address.length < 1 || !regAddress.test(formValue.address)) {
-            error.address = 'Address incorrect'
-            isError = true;
-        }
-        const regZip = /^[0-9]{3}[\s]?[0-9]{3}$/
-        if (formValue.zip.length < 1 || !regZip.test(formValue.zip)) {
-            error.zip = 'Zip incorrect'
-            isError = true;
-        }
 
-        if (formValue.city.length < 1) {
-            error.city = 'City is required'
+        if (formValue.name.length < 1) {
+            error.name = 'Name is required field'
+            setDisplayMessage(error.name);
             isError = true;
         }
-        if (formValue.state.length < 1) {
-            error.state = 'State is required'
+        else if (formValue.state.length < 1) {
+            error.state = 'State is required field'
+            setDisplayMessage(error.state);
             isError = true;
         }
-
+        else if (formValue.city.length < 1) {
+            error.city = 'City is required field'
+            setDisplayMessage(error.city);
+            isError = true;
+        }
+        else if (formValue.address.length < 1) {
+            error.address = 'Address is required field'
+            setDisplayMessage(error.address);
+            isError = true;
+        }
+        else if (formValue.zip.length < 1) {
+            error.zip = 'Zip code is required field'
+            setDisplayMessage(error.zip);
+            isError = true;
+        }
+        else if (formValue.phoneNumber.length < 1) {
+            error.phoneNumber = 'Phone Number is required field'
+            setDisplayMessage(error.phoneNumber);
+            isError = true;
+        }
         await setForm({ ...formValue, error: error })
         return isError;
     }
@@ -154,8 +188,8 @@ const AddressForm = (props) => {
         }
     }
     const reset = () => {
+        setNameError(null);
         setForm({ ...initialValue, id: formValue.id, isUpdate: formValue.isUpdate });
-        console.log(formValue);
     }
 
     return(
@@ -178,18 +212,18 @@ const AddressForm = (props) => {
                     <div className="row-content">
                         <label className="label text" htmlFor="name">Full Name</label>
                         <input className="input" type="text" id="name" name="name" value={formValue.name} onChange={changeValue} autoComplete="disable" required />
-                        <div className="error" id="name-error">{formValue.error.name}</div>
+                        <error-output className="name-error" htmlFor="name">{nameError}</error-output>
                     </div>
                     <div className="row-content">
                         <label className="label text" htmlFor="phoneNumber">Phone Number</label>
                         <input className="input" type="tel" id="phoneNumber" name="phoneNumber" value={formValue.phoneNumber}onChange={changeValue} autoComplete="disable" required />
-                        <div className="error" id="phoneNumber-error">{formValue.error.phoneNumber}</div>
+                        <error-output className="phone-error" htmlFor="tel">{phoneError}</error-output>
                     </div>
                     <div className="row-content">
                         <div className="text-row">
                             <label className="label text" htmlFor="address">Address</label>
                             <textarea id="address" className="input" name="address" value={formValue.address} onChange={changeValue} placeholder="" style={{ height: "100px" }} autoComplete="disable"></textarea>
-                            <div className="error" id="address-error">{formValue.error.address}</div>
+                            <error-output className="address-error" htmlFor="address">{addressError}</error-output>
 
 
                         </div>
@@ -225,7 +259,8 @@ const AddressForm = (props) => {
                         </div>
                     </div>
                     <div className="buttonParent">
-                        <button type="submit" className="button submitButton" id="addButton" >{formValue.isUpdate ? 'Submit' : 'Submit'}</button>
+                        <button isabled={!validForm} type="submit" className={"button addButton" + (validForm ? "" : " disabledButton")} id="addButton">
+                            {formValue.isUpdate ? 'Submit' : 'Submit'}</button>
                         <button type="reset" onClick={reset} className="button resetButton">Reset</button>
                     </div>
                     <div className="displaymessage">
